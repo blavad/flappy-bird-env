@@ -11,7 +11,6 @@ import numpy as np
 from bird import Bird
 from plateforme import Plateforme
 
-
 class FlappyBirdEnv(gym.Env):
     """
     Description:
