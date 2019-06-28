@@ -11,8 +11,8 @@ class Bird:
         self.__x = int(px)
         self.__y = int(py)
         self.__rayon = 15
-        url_flappy = os.path.join(os.path.dirname(flappyBird_env.__file__), 'assets/flappy.jpg')
-        img_flappy = cv2.imread(url_flappy,cv2.IMREAD_COLOR)
+        url_flappy = os.path.join(os.path.dirname(flappyBird_env.__file__), 'assets/flappy_gris.png')
+        img_flappy = cv2.imread(url_flappy,1)
         self.__img = cv2.resize(img_flappy, (self.__rayon, self.__rayon))
 
     @property

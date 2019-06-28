@@ -10,7 +10,7 @@ class Plateforme:
     def __init__(self, x, y_max, taille_o):
         self.__x = int(x)
         self.__epaisseur = 20
-        self.y_ouv = np.random.randint(taille_o//2, high=y_max-(taille_o)*1.5)
+        self.y_ouv = np.random.randint(10, high=y_max-taille_o-10)
         self.size_ouv = taille_o
         url_ph = os.path.join(os.path.dirname(flappyBird_env.__file__), 'assets/plateform_haut.png')
         url_pb = os.path.join(os.path.dirname(flappyBird_env.__file__), 'assets/plateform_bas.png') 

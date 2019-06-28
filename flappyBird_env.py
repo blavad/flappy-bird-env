@@ -45,7 +45,7 @@ class FlappyBirdEnv(gym.Env):
         
         # Dimensions de l ecran d affichage
         self.width = 200
-        self.height = 200
+        self.height = 180
         
         self.score = 0
         self.score_max = 100
@@ -54,16 +54,15 @@ class FlappyBirdEnv(gym.Env):
         self.plateformes = None
         self.nb_plateform = 2
         self.dist_plat = self.width/self.nb_plateform
-        self.size_ouv = 60
+        self.size_ouv = 80
         
         # Parametres lies à l oiseau
         self.bird = None
-        self.massbird = 5
-        self.speedbird = 4.0
-        self.powerbird = 10
+        self.massbird = 4
+        self.speedbird = 3.0
+        self.powerbird = 8
         
         # Autres parametres d etats
-        self.new_plat = False
         self.current_plat = None
         self.steps_beyond_done = None
 
@@ -103,10 +102,14 @@ class FlappyBirdEnv(gym.Env):
         
         # Si plateforme hors plateau, on la supprime et on en ajoute une autre a la suite
         if (self.plateformes[0].x + self.plateformes[0].epaisseur < 0):
-            self.new_plat = True
             new_p = Plateforme(self.plateformes[-1].x + self.dist_plat, self.height, self.size_ouv)
             self.plateformes = np.delete(self.plateformes,0)
-            self.plateformes = np.append(self.plateformes, new_p) 
+            self.plateformes = np.append(self.plateformes, new_p)
+            if (self.size_ouv > 60):
+                self.size_ouv -= 3
+            else :
+                self.speedbird +=0.1
+            
             
         # Decale les plateformes a la vitesse "speedbird"
         for p in self.plateformes :
@@ -140,7 +143,7 @@ class FlappyBirdEnv(gym.Env):
 
     def reset(self):
         self.score = 0
-        self.bird = Bird(self.width//3, self.height//2)
+        self.bird = Bird(self.width//4, self.height//2)
         self.plateformes = [Plateforme(self.width + delta*self.dist_plat, self.height, self.size_ouv) for delta in range(self.nb_plateform)]
         self.current_plat = self._get_current_plateform()
         self.steps_beyond_done = None
@@ -161,7 +164,7 @@ class FlappyBirdEnv(gym.Env):
     def render_array(self):
         img = np.full(
             ( self.height,self.width, 3),
-            255,
+            200,
             dtype=np.uint8,
         )
         img = self.bird.draw(img)
