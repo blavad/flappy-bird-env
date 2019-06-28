@@ -44,15 +44,15 @@ class FlappyBirdEnv(gym.Env):
     def __init__(self):
         
         # Dimensions de l ecran d affichage
-        self.width = 200
-        self.height = 180
+        self.width = 300
+        self.height = 150
         
         self.score = 0
         self.score_max = 100
         
         # Parametres lies aux plateformes
         self.plateformes = None
-        self.nb_plateform = 2
+        self.nb_plateform = 3
         self.dist_plat = self.width/self.nb_plateform
         self.size_ouv = 80
         
@@ -107,7 +107,7 @@ class FlappyBirdEnv(gym.Env):
             self.plateformes = np.append(self.plateformes, new_p)
             if (self.size_ouv > 60):
                 self.size_ouv -= 3
-            else :
+            elif (self.speedbird<6) :
                 self.speedbird +=0.1
             
             
