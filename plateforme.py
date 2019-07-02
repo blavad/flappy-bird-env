@@ -15,8 +15,8 @@ class Plateforme:
         url_ph = os.path.join(os.path.dirname(flappyBird_env.__file__), 'assets/plateform_haut.png')
         url_pb = os.path.join(os.path.dirname(flappyBird_env.__file__), 'assets/plateform_bas.png') 
         
-        plat_haut = cv2.imread(url_ph, cv2.IMREAD_COLOR)
-        plat_bas = cv2.imread(url_pb, cv2.IMREAD_COLOR)
+        plat_haut = cv2.imread(url_ph, cv2.IMREAD_UNCHANGED)
+        plat_bas = cv2.imread(url_pb, cv2.IMREAD_UNCHANGED)
         self.plat_haut = cv2.resize(plat_haut, (self.__epaisseur,y_max - self.y_ouv-self.size_ouv))
         self.plat_bas = cv2.resize(plat_bas, (self.__epaisseur, self.y_ouv))
         
