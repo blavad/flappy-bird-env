@@ -118,7 +118,6 @@ class FlappyBirdEnv(gym.Env):
             
         # Si plateforme hors plateau, on la supprime et on en ajoute une autre a la suite
         if (self.plateformes[0].x + self.plateformes[0].epaisseur < 0):
-            self.score += 1
             new_p = Plateforme(
                 self.plateformes[-1].x + self.dist_plat, self.height, self.size_ouv)
             self.plateformes = np.delete(self.plateformes, 0)
@@ -126,7 +125,9 @@ class FlappyBirdEnv(gym.Env):
             if (self.size_ouv > 60):
                 self.size_ouv -= 2
             elif (self.speedbird < 6):
-                self.speedbird += 0.1
+                self.speedbird += 0.05
+            self.score += 1
+            
 
         # Decale les plateformes a la vitesse "speedbird"
         for p in self.plateformes:
@@ -139,7 +140,6 @@ class FlappyBirdEnv(gym.Env):
         # Calcul du score
         if not done:
             if (self.current_plat != self._get_current_plateform()):
-                self.score += 1
                 self.current_plat = self._get_current_plateform()
             reward = 1.0
         elif self.steps_beyond_done is None:

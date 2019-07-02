@@ -57,6 +57,10 @@ class FlappyBirdDuoEnv(gym.Env):
     @property
     def state(self):
         return self.getState(self.birds['ai'])
+    
+    @property
+    def score(self):
+        return self.flappy_env.score
 
     def reset(self):
         self.flappy_env.reset()
@@ -74,10 +78,10 @@ class FlappyBirdDuoEnv(gym.Env):
             if self.flappy_env.checkCollision(self.birds['human']):
                 self.birds['human'].kill(self.flappy_env.score)
         else:
-            if self.birds['human'].dead_plat + self.resurrect_rate <= self.flappy_env.score :
+            if self.birds['human'].dead_plat + self.resurrect_rate <= self.flappy_env.score and not self.flappy_env.checkCollision(self.birds['human']) :
                 self.birds['human'].backToLife()
 
-        if self.birds['ai'].dead_plat+self.resurrect_rate <= self.flappy_env.score:
+        if self.birds['ai'].dead_plat+self.resurrect_rate <= self.flappy_env.score and not self.flappy_env.checkCollision(self.birds['ai']):
             self.birds['ai'].backToLife()
 
         done = not self.birds['human'].alive and not self.birds['ai'].alive
@@ -109,7 +113,7 @@ class FlappyBirdDuoEnv(gym.Env):
         return self.viewer.imshow(self.render(mode='rbg_array'))
 
     def render_array(self):
-        color = np.array([200,200,200])
+        color = np.array([250,240,170])
         img = self.flappy_env.renderGame(color_background=color)
         img = self.birds['human'].draw(img)
         return np.concatenate((img, self.flappy_env.renderInfos(color-50)), axis=0)

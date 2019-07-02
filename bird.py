@@ -61,5 +61,9 @@ class Bird:
             for idy, y in enumerate(range(img.shape[0]-self.y - self.rayon,img.shape[0]-self.y)):
                 for idx, x in enumerate(range(self.x, self.x+self.rayon)):
                     if self.__img[idy,idx,3]>250:
-                         img[y,x,:] = self.__img[idy,idx,:] 
+                        if (self.alive):
+                            img[y,x,:] = self.__img[idy,idx,:]
+                        else :
+                            img[idy,idx,:] = self.__img[idy,idx,:]
+                         
         return img
