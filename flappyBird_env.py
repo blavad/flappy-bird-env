@@ -44,6 +44,8 @@ class FlappyBirdEnv(gym.Env):
         'fly'
     ]
 
+    high_score = 0
+
     def __init__(self):
 
         # Dimensions de l ecran d affichage
@@ -51,7 +53,8 @@ class FlappyBirdEnv(gym.Env):
         self.height = 150
 
         self.score = 0
-        self.score_max = 100
+        self.high_score = FlappyBirdEnv.high_score
+        self.score_max = 200
 
         # Parametres lies aux plateformes
         self.plateformes = None
@@ -104,15 +107,15 @@ class FlappyBirdEnv(gym.Env):
         self.steps_beyond_done = None
         return np.array(self.state)
 
-    def step(self, action):
+    def step(self, action, duo=False):
         assert self.action_space.contains(
             action), "%r (%s) invalid" % (action, type(action))
 
         # Applique l action sur flappy bird
         action = FlappyBirdEnv.actions[action]
+        self.bird.y += self.powerbird if action == 'fly' and self.bird.y+self.bird.rayon < self.height else 0
+        self.bird.y -= self.massbird if self.bird.y > 0 else 0
         if self.bird.alive :
-            self.bird.y += self.powerbird if action == 'fly' else 0
-            self.bird.y -= self.massbird
             if self.checkCollision(self.bird) :
                 self.bird.kill(self.score)
             
@@ -145,6 +148,8 @@ class FlappyBirdEnv(gym.Env):
         elif self.steps_beyond_done is None:
             self.steps_beyond_done = 0
             reward = 1.0
+            if not duo and self.score>FlappyBirdEnv.high_score:
+                FlappyBirdEnv.high_score = self.score
         else :
             if self.steps_beyond_done == 0:
                 logger.warn("You are calling 'step()' even though this environment has already returned done = True. You should always call 'reset()' once you receive 'done = True' -- any further steps are undefined behavior.")
@@ -163,10 +168,9 @@ class FlappyBirdEnv(gym.Env):
             self.viewer = rendering.SimpleImageViewer()
         return self.viewer.imshow(self.render(mode='rbg_array'))
 
-    def render_array(self):
-        
+    def render_array(self):    
         color = np.array([200,200,200])
-        return np.concatenate((self.renderGame(color_background=color), self.renderInfos(color_background=color-50)), axis=0)
+        return np.concatenate((self.renderGame(color_background=color), self.renderInfos(high_score=FlappyBirdEnv.high_score,color_background=color-50)), axis=0)
 
     def renderGame(self, color_background=[50,200,200]):
         img = np.full(
@@ -180,7 +184,7 @@ class FlappyBirdEnv(gym.Env):
             p.draw(img)
         return img
         
-    def renderInfos(self, color_background=[50,200,200]):
+    def renderInfos(self, high_score=None, color_background=[50,200,200]):
         height = 30
         infosImg = np.full(
             (height, self.width, 4),
@@ -188,7 +192,7 @@ class FlappyBirdEnv(gym.Env):
             dtype=np.uint8,
         )
         infosImg[:,:,:3] = color_background
-        return self.displayScore(infosImg)
+        return self.displayInfos(infosImg, high_score)
          
 
     def close(self):
@@ -197,10 +201,12 @@ class FlappyBirdEnv(gym.Env):
             self.viewer = None
             
             
-    def displayScore(self,img):
+    def displayInfos(self, img,  high_score):
         font = cv2.FONT_HERSHEY_SIMPLEX
         color = (0,0,0)
         cv2.putText(img, "Score {}".format(self.score), (10,20), font, 0.6, color, 1, cv2.LINE_AA)
+        if high_score is not None :
+            cv2.putText(img, "High Score {}".format(high_score), (150,20), font, 0.6, color, 1, cv2.LINE_AA)
         return img
 
     def _get_current_plateform(self):

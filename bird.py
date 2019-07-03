@@ -3,6 +3,7 @@ import math
 import numpy as np
 import cv2
 
+import tools
 import flappyBird_env
 
 class Bird:
@@ -15,14 +16,10 @@ class Bird:
         self.__rayon = 15
         
         self.__alive = True
-        self.__dead_plat = 100
+        self.__step_death = None
+        self.num_step_death = 100
 
-        self.loadImages(img_name)
-        
-    def loadImages(self, img_name):
-        url_flappy = os.path.join(os.path.dirname(flappyBird_env.__file__), 'assets/{}.png'.format(img_name))
-        img_flappy = cv2.imread(url_flappy, cv2.IMREAD_UNCHANGED)
-        self.__img = cv2.resize(img_flappy, (self.__rayon, self.__rayon))
+        self.__img = tools.loadImage(img_name, self.__rayon, self.__rayon)
 
     @property
     def x(self):
@@ -45,25 +42,25 @@ class Bird:
         return self.__alive
     
     @property
-    def dead_plat(self):
-        return self.__dead_plat
+    def step_death(self):
+        return self.__step_death
+    
+    @step_death.setter
+    def step_death(self, step_death):
+        self.__step_death = step_death
     
     def kill(self, plat_num):
         self.__alive = False
-        self.__dead_plat = plat_num
-        self.y = self.__y_init
+        if (self.__step_death is None):
+            self.__step_death = 1
         
     def backToLife(self):
         self.__alive = True
+        self.__step_death = None
 
     def draw(self, img):
-        if (self.y > 0 and self.y + self.rayon < img.shape[0]):
-            for idy, y in enumerate(range(img.shape[0]-self.y - self.rayon,img.shape[0]-self.y)):
-                for idx, x in enumerate(range(self.x, self.x+self.rayon)):
-                    if self.__img[idy,idx,3]>250:
-                        if (self.alive):
-                            img[y,x,:] = self.__img[idy,idx,:]
-                        else :
-                            img[idy,idx,:] = self.__img[idy,idx,:]
-                         
+        for idy, y in enumerate(range(img.shape[0]-self.y - self.rayon,img.shape[0]-self.y)):
+            for idx, x in enumerate(range(self.x, self.x+self.rayon)):
+                if self.__img[idy,idx,3]>250 and tools.are_valide_coord(img, x,y):
+                    img[y,x,:] = self.__img[idy,idx,:]   
         return img
