@@ -96,7 +96,7 @@ class FlappyBirdDuoEnv(gym.Env):
             if self.birds['ai'].end_death_time() and not self.flappy_env.checkCollision(self.birds['ai']):
                 self.birds['ai'].backToLife()
 
-        done = not self.birds['human'].alive and not self.birds['ai'].alive and self.birds['human'].num_life > 0 and self.birds['ai'].num_life >0
+        done = (not self.birds['human'].alive and not self.birds['ai'].alive) or self.birds['human'].num_life <= 0 or self.birds['ai'].num_life <= 0
 
         # Calcul du score
         if not done:
