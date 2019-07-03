@@ -131,7 +131,7 @@ class FlappyBirdDuoEnv(gym.Env):
         return np.concatenate((img, self.flappy_env.renderInfos(high_score=FlappyBirdDuoEnv.high_score, color_background=color-50)), axis=0)
 
     def drawBulle(self, img, bird):
-        max_rate = 0.8
+        max_rate = 0.8*(1-bird.ghost_rate)
         rate = max_rate - max_rate*(bird.step_death / bird.num_step_death)
         for idy, y in enumerate(range(img.shape[0]-bird.y - bird.rayon-5, img.shape[0]-bird.y+5)):
             for idx, x in enumerate(range(bird.x-5, bird.x+bird.rayon+5)):
