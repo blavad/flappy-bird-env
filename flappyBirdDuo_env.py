@@ -58,7 +58,6 @@ class FlappyBirdDuoEnv(gym.Env):
             'ai': self.flappy_env.bird
         }
         self.steps_beyond_done = None
-        self.resurrect_rate = 4
 
     @property
     def state(self):
@@ -71,9 +70,9 @@ class FlappyBirdDuoEnv(gym.Env):
     def reset(self):
         self.flappy_env.reset()
         self.birds['ai'] = self.flappy_env.bird = Bird(
-            self.flappy_env.width//4, self.flappy_env.height//2, img_name='flappy2',ghost_rate=0.5)
+            self.flappy_env.width//4, self.flappy_env.height//2, img_name='flappy', ghost_rate=0.)
         self.birds['human'] = Bird(
-            self.flappy_env.width//4, self.flappy_env.height//2, 'flappy')
+            self.flappy_env.width//4 - 1.5*self.birds['ai'].rayon, self.flappy_env.height//2, 'flappy2')
 
         self.bulle = tools.loadImage(
             "bulle2", self.birds['ai'].rayon+10, self.birds['ai'].rayon + 10)
@@ -81,17 +80,23 @@ class FlappyBirdDuoEnv(gym.Env):
 
     def step(self, action):
         state, rew, ai_done, _ = self.flappy_env.step(action['ai'], duo=True)
-        self.birds['human'].y -= self.flappy_env.massbird if self.birds['human'].y > 0 else 0
-        self.birds['human'].y += self.flappy_env.powerbird if FlappyBirdEnv.actions[action['human']] == "fly" and self.birds['human'].y+self.birds['human'].rayon < self.flappy_env.height else 0
         if self.birds['human'].alive:
+            self.birds['human'].y -= self.flappy_env.massbird if self.birds['human'].y > 0 else 0
+            self.birds['human'].y += self.flappy_env.powerbird if FlappyBirdEnv.actions[action['human']
+                                                                                        ] == "fly" and self.birds['human'].y+self.birds['human'].rayon < self.flappy_env.height else 0
             if self.flappy_env.checkCollision(self.birds['human']):
                 self.birds['human'].kill(self.flappy_env.score)
+        else:
+            self.birds['human'].update_death_state()
+            if self.birds['human'].end_death_time() and not self.flappy_env.checkCollision(self.birds['human']):
+                self.birds['human'].backToLife()
 
-        self.birds['human'].update_death_state()
-        self.birds['ai'].update_death_state()
+        if not self.birds['ai'].alive:
+            self.birds['ai'].update_death_state()
+            if self.birds['ai'].end_death_time() and not self.flappy_env.checkCollision(self.birds['ai']):
+                self.birds['ai'].backToLife()
 
-        done = not self.birds['human'].alive and not self.birds['ai'].alive
-        done = bool(done)
+        done = not self.birds['human'].alive and not self.birds['ai'].alive and self.birds['human'].num_life > 0 and self.birds['ai'].num_life >0
 
         # Calcul du score
         if not done:
@@ -133,14 +138,16 @@ class FlappyBirdDuoEnv(gym.Env):
     def drawBulle(self, img, bird):
         max_rate = 0.8*(1-bird.ghost_rate)
         rate = max_rate - max_rate*(bird.step_death / bird.num_step_death)
+        rate = max(rate, 0)
         for idy, y in enumerate(range(img.shape[0]-bird.y - bird.rayon-5, img.shape[0]-bird.y+5)):
             for idx, x in enumerate(range(bird.x-5, bird.x+bird.rayon+5)):
                 if self.bulle[idy, idx, 3] > 250 and tools.are_valide_coord(img, x, y):
-                    img[y, x, :] = rate*self.bulle[idy,idx, :] + (1-rate)*img[y, x, :]
+                    img[y, x, :] = rate*self.bulle[idy,
+                                                   idx, :] + (1-rate)*img[y, x, :]
         return img
 
     def getState(self, bird):
-        c_p = self.flappy_env._get_current_plateform()
+        c_p = self.flappy_env._get_current_plateform(bird)
         dx = c_p.x - (bird.x + bird.rayon)
         dy = bird.y - c_p.get_pos_ouv()
         sp_x = self.flappy_env.speedbird

@@ -91,7 +91,7 @@ class FlappyBirdEnv(gym.Env):
     @property
     def state(self):
         # Mets a jour l etat
-        c_p = self._get_current_plateform()
+        c_p = self._get_current_plateform(self.bird)
         dx = c_p.x - (self.bird.x + self.bird.rayon)
         dy = self.bird.y - c_p.get_pos_ouv()
         sp_x = self.speedbird
@@ -103,7 +103,7 @@ class FlappyBirdEnv(gym.Env):
         self.bird = Bird(self.width//4, self.height//2)
         self.plateformes = [Plateforme(self.width + delta*self.dist_plat,
                                        self.height, self.size_ouv) for delta in range(self.nb_plateform)]
-        self.current_plat = self._get_current_plateform()
+        self.current_plat = self._get_current_plateform(self.bird)
         self.steps_beyond_done = None
         return np.array(self.state)
 
@@ -142,8 +142,8 @@ class FlappyBirdEnv(gym.Env):
 
         # Calcul du score
         if not done:
-            if (self.current_plat != self._get_current_plateform()):
-                self.current_plat = self._get_current_plateform()
+            if (self.current_plat != self._get_current_plateform(self.bird)):
+                self.current_plat = self._get_current_plateform(self.bird)
             reward = 1.0
         elif self.steps_beyond_done is None:
             self.steps_beyond_done = 0
@@ -209,13 +209,13 @@ class FlappyBirdEnv(gym.Env):
             cv2.putText(img, "High Score {}".format(high_score), (150,20), font, 0.6, color, 1, cv2.LINE_AA)
         return img
 
-    def _get_current_plateform(self):
+    def _get_current_plateform(self, bird):
         for p in self.plateformes:
-            if (p.x+p.epaisseur > self.bird.x):
+            if (p.x+p.epaisseur > bird.x):
                 return p
 
     def checkCollision(self, bird):
-        c_p = self._get_current_plateform()        
+        c_p = self._get_current_plateform(bird)        
         return bird.y <= 0\
             or bird.y+bird.rayon > self.height \
             or ((bird.x+bird.rayon > c_p.x) and ((bird.y < c_p.get_pos_ouv()) or (bird.y+bird.rayon > c_p.get_pos_ouv() + c_p.get_size_ouv())))

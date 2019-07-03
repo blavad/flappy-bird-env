@@ -11,13 +11,14 @@ class Bird:
     def __init__(self, px, py, img_name = "flappy", ghost_rate=0.):
         self.__x = int(px)
         self.__y = int(py)
-        self.__y_init = int(py)
+        self.y_init = int(py)
             
         self.__rayon = 15
         
         self.__step_death = None
         self.num_step_death = 100
         self.ghost_rate = ghost_rate
+        self.num_life = 3
 
         self.__img = tools.loadImage(img_name, self.__rayon, self.__rayon)
 
@@ -52,15 +53,18 @@ class Bird:
     def kill(self, plat_num):
         if self.__step_death is None:
             self.__step_death = 1
+            self.num_life -= 1
         
     def backToLife(self):
         self.__step_death = None
         
     def update_death_state(self):
-        if not self.alive:
+        if not self.alive :
             self.step_death = self.step_death + 1
-            if self.step_death >= self.num_step_death:
-                self.backToLife()
+            self.y -= 1 if self.y_init - self.y < 0 else -1
+
+    def end_death_time(self):
+        return self.step_death >= self.num_step_death
 
     def draw(self, img):
         for idy, y in enumerate(range(img.shape[0]-self.y - self.rayon,img.shape[0]-self.y)):
