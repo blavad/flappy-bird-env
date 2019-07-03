@@ -70,31 +70,25 @@ class FlappyBirdDuoEnv(gym.Env):
 
     def reset(self):
         self.flappy_env.reset()
-        self.birds['ai'] = self.flappy_env.bird
+        self.birds['ai'] = self.flappy_env.bird = Bird(
+            self.flappy_env.width//4, self.flappy_env.height//2, img_name='flappy2',ghost_rate=0.5)
         self.birds['human'] = Bird(
-            self.flappy_env.width//4, self.flappy_env.height//2, 'flappy2')
+            self.flappy_env.width//4, self.flappy_env.height//2, 'flappy')
 
         self.bulle = tools.loadImage(
             "bulle2", self.birds['ai'].rayon+10, self.birds['ai'].rayon + 10)
         return np.array(self.state)
 
     def step(self, action):
-
         state, rew, ai_done, _ = self.flappy_env.step(action['ai'], duo=True)
         self.birds['human'].y -= self.flappy_env.massbird if self.birds['human'].y > 0 else 0
         self.birds['human'].y += self.flappy_env.powerbird if FlappyBirdEnv.actions[action['human']] == "fly" and self.birds['human'].y+self.birds['human'].rayon < self.flappy_env.height else 0
         if self.birds['human'].alive:
             if self.flappy_env.checkCollision(self.birds['human']):
                 self.birds['human'].kill(self.flappy_env.score)
-        else:
-            self.birds['human'].step_death = self.birds['human'].step_death+1
-            if self.birds['human'].step_death >= self.birds['human'].num_step_death:
-                self.birds['human'].backToLife()
 
-        if not self.birds['human'].alive:
-            self.birds['ai'].step_death = self.birds['human'].step_death + 1
-            if self.birds['ai'].step_death >= self.birds['ai'].num_step_death:
-                self.birds['ai'].backToLife()
+        self.birds['human'].update_death_state()
+        self.birds['ai'].update_death_state()
 
         done = not self.birds['human'].alive and not self.birds['ai'].alive
         done = bool(done)
@@ -130,13 +124,10 @@ class FlappyBirdDuoEnv(gym.Env):
         color = np.array([250, 240, 170])
         img = self.flappy_env.renderGame(color_background=color)
         img = self.birds['human'].draw(img)
-
         if not self.birds['human'].alive:
             img = self.drawBulle(img, self.birds['human'])
-
         if not self.birds['ai'].alive:
             img = self.drawBulle(img, self.birds['ai'])
-
         return np.concatenate((img, self.flappy_env.renderInfos(high_score=FlappyBirdDuoEnv.high_score, color_background=color-50)), axis=0)
 
     def drawBulle(self, img, bird):
@@ -145,7 +136,7 @@ class FlappyBirdDuoEnv(gym.Env):
         for idy, y in enumerate(range(img.shape[0]-bird.y - bird.rayon-5, img.shape[0]-bird.y+5)):
             for idx, x in enumerate(range(bird.x-5, bird.x+bird.rayon+5)):
                 if self.bulle[idy, idx, 3] > 250 and tools.are_valide_coord(img, x, y):
-                    img[y, x, :] = rate*self.bulle[idy, idx, :] + (1-rate)*img[y, x, :]
+                    img[y, x, :] = rate*self.bulle[idy,idx, :] + (1-rate)*img[y, x, :]
         return img
 
     def getState(self, bird):
