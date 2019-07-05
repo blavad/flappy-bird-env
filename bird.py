@@ -39,6 +39,10 @@ class Bird:
         return self.__rayon
     
     @property
+    def img(self):
+        return self.__img
+    
+    @property
     def alive(self):
         return self.__step_death is None
     

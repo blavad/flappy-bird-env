@@ -61,11 +61,18 @@ class FlappyBirdDuoEnv(gym.Env):
 
     @property
     def state(self):
-        return self.getState(self.birds['ai'])
+        return self.flappy_env.state
 
     @property
     def score(self):
         return self.flappy_env.score
+    
+    @property
+    def score_max(self):
+        return self.flappy_env.score_max
+    
+    def is_dead(self, player):
+        return not self.birds[player].alive
 
     def reset(self):
         self.flappy_env.reset()
@@ -74,8 +81,7 @@ class FlappyBirdDuoEnv(gym.Env):
         self.birds['human'] = Bird(
             self.flappy_env.width//4 - 1.5*self.birds['ai'].rayon, self.flappy_env.height//2, 'flappy2')
 
-        self.bulle = tools.loadImage(
-            "bulle2", self.birds['ai'].rayon+10, self.birds['ai'].rayon + 10)
+        self.bulle = tools.loadImage("bulle2", self.birds['ai'].rayon+10, self.birds['ai'].rayon + 10)
         return np.array(self.state)
 
     def step(self, action):
@@ -96,7 +102,7 @@ class FlappyBirdDuoEnv(gym.Env):
             if self.birds['ai'].end_death_time() and not self.flappy_env.checkCollision(self.birds['ai']):
                 self.birds['ai'].backToLife()
 
-        done = (not self.birds['human'].alive and not self.birds['ai'].alive) or self.birds['human'].num_life <= 0 or self.birds['ai'].num_life <= 0
+        done = (not self.birds['human'].alive and not self.birds['ai'].alive) or self.birds['human'].num_life <= 0 or self.birds['ai'].num_life <= 0 or self.score > self.score_max
 
         # Calcul du score
         if not done:
@@ -133,6 +139,7 @@ class FlappyBirdDuoEnv(gym.Env):
             img = self.drawBulle(img, self.birds['human'])
         if not self.birds['ai'].alive:
             img = self.drawBulle(img, self.birds['ai'])
+        img = self.displayLives(img)
         return np.concatenate((img, self.flappy_env.renderInfos(high_score=FlappyBirdDuoEnv.high_score, color_background=color-50)), axis=0)
 
     def drawBulle(self, img, bird):
@@ -145,11 +152,13 @@ class FlappyBirdDuoEnv(gym.Env):
                     img[y, x, :] = rate*self.bulle[idy,
                                                    idx, :] + (1-rate)*img[y, x, :]
         return img
-
-    def getState(self, bird):
-        c_p = self.flappy_env._get_current_plateform(bird)
-        dx = c_p.x - (bird.x + bird.rayon)
-        dy = bird.y - c_p.get_pos_ouv()
-        sp_x = self.flappy_env.speedbird
-        sp_y = self.flappy_env.massbird
-        return (dx, dy, sp_x, sp_y)
+    
+    def displayLives(self, img):
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        color = (0,0,0)
+        tools.putImg(img, self.birds['ai'].img, 5, self.flappy_env.height-20, 13,12)
+        tools.putImg(img, self.birds['human'].img, 5, self.flappy_env.height-40, 13,12)
+        
+        cv2.putText(img, " {}".format(self.birds["ai"].num_life), (20,self.flappy_env.height-10), font, 0.3, color, 1, cv2.LINE_AA)
+        cv2.putText(img, " {}".format(self.birds["human"].num_life), (20,self.flappy_env.height-30), font, 0.3, color, 1, cv2.LINE_AA)
+        return img
