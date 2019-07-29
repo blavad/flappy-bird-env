@@ -54,18 +54,22 @@ class FlappyBirdEnv(gym.Env):
 
         self.score = 0
         self.high_score = FlappyBirdEnv.high_score
-        self.score_max = 200
+        self.score_max = 400
 
         # Parametres lies aux plateformes
         self.plateformes = None
         self.nb_plateform = 3
         self.dist_plat = self.width/self.nb_plateform
-        self.size_ouv = 80
+        self.min_size_ouv = 60
+        self.max_size_ouv = 80
+        self.size_ouv = self.max_size_ouv
 
         # Parametres lies à l oiseau
         self.bird = None
         self.massbird = 4
-        self.speedbird = 3.0
+        self.min_speed= 3.0
+        self.max_speed= 6.0
+        self.speedbird = self.min_speed
         self.powerbird = 8
 
         # Autres parametres d etats
@@ -73,9 +77,6 @@ class FlappyBirdEnv(gym.Env):
         self.steps_beyond_done = None
 
         high = np.array([
-            np.finfo(np.float32).max,
-            np.finfo(np.float32).max,
-            np.finfo(np.float32).max,
             np.finfo(np.float32).max])
 
         self.action_space = spaces.Discrete(2)
@@ -93,13 +94,16 @@ class FlappyBirdEnv(gym.Env):
         # Mets a jour l etat
         c_p = self._get_current_plateform(self.bird)
         dx = c_p.x - (self.bird.x + self.bird.rayon)
-        dy = self.bird.y - c_p.get_pos_ouv()
+        dy = (self.bird.y + self.bird.rayon/2) - (self._get_current_plateform(self.bird).get_pos_ouv()+self._get_current_plateform(self.bird).get_size_ouv()/2)
         sp_x = self.speedbird
         sp_y = self.massbird
-        return (dx, dy, sp_x, sp_y)
-
+        return [dy] #(dx, dy, sp_x, sp_y)
+ 
     def reset(self):
         self.score = 0
+        self.speedbird = self.min_speed
+        self.size_ouv = self.max_size_ouv
+        
         self.bird = Bird(self.width//4, self.height//2)
         self.plateformes = [Plateforme(self.width + delta*self.dist_plat,
                                        self.height, self.size_ouv) for delta in range(self.nb_plateform)]
@@ -155,7 +159,7 @@ class FlappyBirdEnv(gym.Env):
                 logger.warn("You are calling 'step()' even though this environment has already returned done = True. You should always call 'reset()' once you receive 'done = True' -- any further steps are undefined behavior.")
             self.steps_beyond_done += 1
             reward = 0.0
-        return np.array(self.state), reward, done, {}
+        return self.state, reward, done, {}
 
     def render(self, mode='human'):
         if mode == 'human':
