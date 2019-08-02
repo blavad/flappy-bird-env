@@ -58,6 +58,11 @@ class FlappyBirdDuoEnv(gym.Env):
             'ai': self.flappy_env.bird
         }
         self.steps_beyond_done = None
+        
+        self.num_step_cant_dead = 10
+        
+        self.action_space = self.flappy_env.action_space
+        self.observation_space = self.flappy_env.observation_space
 
     @property
     def state(self):
@@ -90,12 +95,14 @@ class FlappyBirdDuoEnv(gym.Env):
             self.birds['human'].y -= self.flappy_env.massbird if self.birds['human'].y > 0 else 0
             self.birds['human'].y += self.flappy_env.powerbird if FlappyBirdEnv.actions[action['human']
                                                                                         ] == "fly" and self.birds['human'].y+self.birds['human'].rayon < self.flappy_env.height else 0
-            if self.flappy_env.checkCollision(self.birds['human']):
-                self.birds['human'].kill(self.flappy_env.score)
+            if self.birds['human'].can_be_killed():
+                if self.flappy_env.checkCollision(self.birds['human']):
+                    self.birds['human'].kill(self.flappy_env.score)
         else:
             self.birds['human'].update_death_state()
             if self.birds['human'].end_death_time() and not self.flappy_env.checkCollision(self.birds['human']):
                 self.birds['human'].backToLife()
+            
 
         if not self.birds['ai'].alive:
             self.birds['ai'].update_death_state()

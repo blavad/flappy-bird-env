@@ -17,6 +17,9 @@ class Bird:
         
         self.__step_death = None
         self.num_step_death = 100
+        
+        self.__step_after_death = None
+        self.num_step_after_death = self.num_step_death //3
         self.ghost_rate = ghost_rate
         self.num_life = 3
 
@@ -46,6 +49,9 @@ class Bird:
     def alive(self):
         return self.__step_death is None
     
+    def can_be_killed(self):
+        return self.__step_death is None 
+    
     @property
     def step_death(self):
         return self.__step_death
@@ -61,6 +67,7 @@ class Bird:
         
     def backToLife(self):
         self.__step_death = None
+        self.__step_after_death = 1
         
     def update_death_state(self):
         if not self.alive :

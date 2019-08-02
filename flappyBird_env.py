@@ -45,6 +45,8 @@ class FlappyBirdEnv(gym.Env):
     ]
 
     high_score = 0
+    
+    
 
     def __init__(self):
 
@@ -54,18 +56,22 @@ class FlappyBirdEnv(gym.Env):
 
         self.score = 0
         self.high_score = FlappyBirdEnv.high_score
-        self.score_max = 200
+        self.score_max = 400
 
         # Parametres lies aux plateformes
         self.plateformes = None
         self.nb_plateform = 3
         self.dist_plat = self.width/self.nb_plateform
-        self.size_ouv = 80
+        self.min_size_ouv = 60
+        self.max_size_ouv = 80
+        self.size_ouv = self.max_size_ouv
 
         # Parametres lies à l oiseau
         self.bird = None
         self.massbird = 4
-        self.speedbird = 3.0
+        self.min_speed= 3.0
+        self.max_speed= 6.0
+        self.speedbird = self.min_speed
         self.powerbird = 8
 
         # Autres parametres d etats
@@ -73,9 +79,6 @@ class FlappyBirdEnv(gym.Env):
         self.steps_beyond_done = None
 
         high = np.array([
-            np.finfo(np.float32).max,
-            np.finfo(np.float32).max,
-            np.finfo(np.float32).max,
             np.finfo(np.float32).max])
 
         self.action_space = spaces.Discrete(2)
@@ -91,15 +94,20 @@ class FlappyBirdEnv(gym.Env):
     @property
     def state(self):
         # Mets a jour l etat
-        c_p = self._get_current_plateform(self.bird)
-        dx = c_p.x - (self.bird.x + self.bird.rayon)
-        dy = self.bird.y - c_p.get_pos_ouv()
+        info_pls = self._get_infos_next_plateform(self.bird, 1)
+        out = []
+        for i in info_pls : 
+            out = out+i
         sp_x = self.speedbird
         sp_y = self.massbird
-        return (dx, dy, sp_x, sp_y)
-
+        return [((self.bird.y + self.bird.rayon/2) - 
+                (self._get_current_plateform(self.bird).get_pos_ouv()+self._get_current_plateform(self.bird).get_size_ouv()/2))]
+                
     def reset(self):
         self.score = 0
+        self.speedbird = self.min_speed
+        self.size_ouv = self.max_size_ouv
+        
         self.bird = Bird(self.width//4, self.height//2)
         self.plateformes = [Plateforme(self.width + delta*self.dist_plat,
                                        self.height, self.size_ouv) for delta in range(self.nb_plateform)]
@@ -125,9 +133,9 @@ class FlappyBirdEnv(gym.Env):
                 self.plateformes[-1].x + self.dist_plat, self.height, self.size_ouv)
             self.plateformes = np.delete(self.plateformes, 0)
             self.plateformes = np.append(self.plateformes, new_p)
-            if (self.size_ouv > 60):
+            if (self.size_ouv > self.min_size_ouv):
                 self.size_ouv -= 2
-            elif (self.speedbird < 6):
+            elif (self.speedbird < self.max_speed):
                 self.speedbird += 0.05
             self.score += 1
             
@@ -169,7 +177,7 @@ class FlappyBirdEnv(gym.Env):
         return self.viewer.imshow(self.render(mode='rbg_array'))
 
     def render_array(self):    
-        color = np.array([200,200,200])
+        color = np.array([250, 240, 170])
         return np.concatenate((self.renderGame(color_background=color), self.renderInfos(high_score=FlappyBirdEnv.high_score,color_background=color-50)), axis=0)
 
     def renderGame(self, color_background=[50,200,200]):
@@ -211,8 +219,18 @@ class FlappyBirdEnv(gym.Env):
 
     def _get_current_plateform(self, bird):
         for p in self.plateformes:
-            if (p.x+p.epaisseur > bird.x):
+            if (p.x + p.epaisseur > bird.x):
                 return p
+
+    def _get_infos_next_plateform(self, bird, num_p = 2):
+        infos = []
+        for p in self.plateformes:
+            if (p.x + p.epaisseur > bird.x and num_p>0):
+                dx = p.x - (self.bird.x + self.bird.rayon)
+                dy = (self.bird.y + self.bird.rayon/2) - (p.get_pos_ouv()+p.get_size_ouv()/2)           
+                infos.append([dx,dy])
+                num_p-=1
+        return infos
 
     def checkCollision(self, bird):
         c_p = self._get_current_plateform(bird)        
