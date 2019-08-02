@@ -81,5 +81,5 @@ class Bird:
         for idy, y in enumerate(range(img.shape[0]-self.y - self.rayon,img.shape[0]-self.y)):
             for idx, x in enumerate(range(self.x, self.x+self.rayon)):
                 if self.__img[idy,idx,3]>250 and tools.are_valide_coord(img, x,y):
-                   img[y,x,:] = (1-self.ghost_rate)* self.__img[idy,idx,:] + self.ghost_rate*img[y, x, :]   
+                    img[y,x,:] = (1-self.ghost_rate)* self.__img[idy,idx,:] + self.ghost_rate*img[y, x, :]   
         return img

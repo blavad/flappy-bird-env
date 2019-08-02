@@ -94,15 +94,13 @@ class FlappyBirdEnv(gym.Env):
     @property
     def state(self):
         # Mets a jour l etat
-        info_pls = self._get_infos_next_plateform(self.bird, 1)
-        out = []
-        for i in info_pls : 
-            out = out+i
+        c_p = self._get_current_plateform(self.bird)
+        dx = c_p.x - (self.bird.x + self.bird.rayon)
+        dy = (self.bird.y + self.bird.rayon/2) - (self._get_current_plateform(self.bird).get_pos_ouv()+self._get_current_plateform(self.bird).get_size_ouv()/2)
         sp_x = self.speedbird
         sp_y = self.massbird
-        return [((self.bird.y + self.bird.rayon/2) - 
-                (self._get_current_plateform(self.bird).get_pos_ouv()+self._get_current_plateform(self.bird).get_size_ouv()/2))]
-                
+        return [dy] #(dx, dy, sp_x, sp_y)
+ 
     def reset(self):
         self.score = 0
         self.speedbird = self.min_speed
@@ -163,7 +161,7 @@ class FlappyBirdEnv(gym.Env):
                 logger.warn("You are calling 'step()' even though this environment has already returned done = True. You should always call 'reset()' once you receive 'done = True' -- any further steps are undefined behavior.")
             self.steps_beyond_done += 1
             reward = 0.0
-        return np.array(self.state), reward, done, {}
+        return self.state, reward, done, {}
 
     def render(self, mode='human'):
         if mode == 'human':
